@@ -2,26 +2,27 @@
 
 ## Description
 
-The ALX Travel App is a platform for listing and discovering travel destinations. It provides an API for managing listings, bookings, reviews, and user accounts.
+The ALX Travel App is a platform for listing and discovering travel destinations. It provides a RESTful API for managing listings, bookings, reviews, and user accounts.
 
 ## Features
 
--   User authentication and authorization
--   Listing management (create, read, update, delete)
--   Booking management
--   Review management
--   API documentation using Swagger and ReDoc
+* User authentication and authorization
+* Listing management (create, read, update, delete)
+* Booking management (users can view and create their own bookings)
+* Review management
+* API documentation using Swagger and ReDoc
 
 ## Technologies Used
 
--   Python 3.12+
--   Django 5.2.4
--   Django REST Framework 3.16.0
--   MySQLclient 2.2.7
--   drf-yasg 1.21.10
--   django-cors-headers 4.7.0
--   django-environ 0.12.0
--   Other dependencies listed in [requirements.txt](alx_travel_app/requirements.txt)
+* Python 3.12+
+* Django 5.2.4
+* Django REST Framework 3.16.0
+* MySQLclient 2.2.7
+* drf-yasg 1.21.10
+* django-cors-headers 4.7.0
+* django-environ 0.12.0
+* Other dependencies listed in [requirements.txt](alx_travel_app/requirements.txt)
+
 
 ## Setup Instructions
 
@@ -94,12 +95,20 @@ The ALX Travel App is a platform for listing and discovering travel destinations
     python manage.py runserver
     ```
 
+## API Endpoints
+
+* **Listings**: `/api/listings/`
+  Supports full CRUD. Creating a listing automatically associates it with the authenticated user as the host.
+
+* **Bookings**: `/api/bookings/`
+  Users can view and create bookings. Bookings returned are limited to those made by the authenticated user.
+
+
 ## API Documentation
 
-The API documentation can be accessed via:
-
--   Swagger UI: `http://localhost:8000/swagger/`
--   ReDoc: `http://localhost:8000/redoc/`
+* Swagger UI: [http://localhost:8000/swagger/](http://localhost:8000/swagger/)
+* Swagger JSON/YAML: [http://localhost:8000/swagger.json](http://localhost:8000/swagger.json)
+* ReDoc: [http://localhost:8000/redoc/](http://localhost:8000/redoc/)
 
 ## Models
 
