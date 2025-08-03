@@ -10,8 +10,16 @@ class ListingViewSet(viewsets.ModelViewSet):
     serializer_class = ListingSerializer
     queryset = Listing.objects.all()
     
+    def perform_create(self, serializer):
+        serializer.save(host=self.request.user)
+    
     
 class BookingViewSet(viewsets.ModelViewSet):
     serializer_class = BookingSerializer
-    queryset = Booking.objects.all()
+    
+    def get_queryset(self):
+        return Booking.objects.filter(user=self.request.user)
+    
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
     
