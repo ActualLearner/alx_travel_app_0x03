@@ -9,34 +9,38 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .models import Payment
+from .tasks import send_booking_confirmation_email
 import os
 
 # Create your views here.
 CHAPA_SECRET_KEY = os.getenv("CHAPA_SECRET_KEY")
 CHAPA_URL = "https://api.chapa.co/v1/transaction/initialize"
 
+
 class ListingViewSet(viewsets.ModelViewSet):
     serializer_class = ListingSerializer
     queryset = Listing.objects.all()
-    
+
     def perform_create(self, serializer):
         serializer.save(host=self.request.user)
-    
-    
+
+
 class BookingViewSet(viewsets.ModelViewSet):
     serializer_class = BookingSerializer
-    
+
     def get_queryset(self):
         return Booking.objects.filter(user=self.request.user)
-    
+
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+        send_booking_confirmation_email.delay(booking.id)
 
-@api_view(['POST'])
+
+@api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def initiate_payment(request):
     user = request.user
-    amount = request.data.get('amount')
+    amount = request.data.get("amount")
     booking_reference = str(uuid.uuid4())
 
     payment = Payment.objects.create(
@@ -67,7 +71,7 @@ def initiate_payment(request):
 
     response = requests.post(
         f"{settings.CHAPA_BASE_URL.rstrip('/')}/transaction/initialize",
-        json=data,   # ✅ use `json` instead of `data` so Chapa receives proper JSON
+        json=data,  # ✅ use `json` instead of `data` so Chapa receives proper JSON
         headers=headers,
     )
 
@@ -81,7 +85,7 @@ def initiate_payment(request):
         return Response(resp_json, status=400)
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def verify_payment(request, booking_reference):
     try:
@@ -93,12 +97,17 @@ def verify_payment(request, booking_reference):
         "Authorization": f"Bearer {settings.CHAPA_SECRET_KEY}",
     }
 
-    verify_url = f"{settings.CHAPA_BASE_URL.rstrip('/')}/transaction/verify/{booking_reference}"
+    verify_url = (
+        f"{settings.CHAPA_BASE_URL.rstrip('/')}/transaction/verify/{booking_reference}"
+    )
 
     response = requests.get(verify_url, headers=headers)
     resp_json = response.json()
 
-    if resp_json.get("status") == "success" and resp_json["data"]["status"] == "success":
+    if (
+        resp_json.get("status") == "success"
+        and resp_json["data"]["status"] == "success"
+    ):
         payment.status = "Completed"
         payment.save()
 
