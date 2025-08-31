@@ -157,12 +157,17 @@ CELERY_BROKER_URL = "amqp://guest:guest@localhost:5672//"
 # Optional: If you want to store task results.
 
 CELERY_RESULT_BACKEND = "rpc://"
+CELERY_ACCEPT_CONTENT = ["json"]
 
+CELERY_TASK_SERIALIZER = "json"
 
-# --- Email Configuration ---
+CELERY_RESULT_SERIALIZER = "json"
 
-# You need to tell Django how to send emails.
+CELERY_TIMEZONE = "UTC"
 
+CELERY_TASK_TRACK_STARTED = True
+
+CELERY_TASK_TIME_LIMIT = 300  # seconds
 # For development, the console backend is easiest. It just prints emails to your terminal.
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
