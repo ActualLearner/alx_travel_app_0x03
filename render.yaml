@@ -2,17 +2,21 @@ services:
   # 1. A PostgreSQL database for your app
   - type: pserv
     name: travel-app-db
-    env: postgres
+    # The 'postgres' block tells Render what kind of managed service this is
+    postgres:
+      databaseName: travelappdb
+      user: travelappuser
 
   # 2. A Redis instance for your Celery tasks
   - type: pserv
     name: travel-app-redis
-    env: redis
+    # The 'redis' block defines this as a managed Redis instance
+    redis: {}
 
   # 3. Your Django Web Service (runs Gunicorn)
   - type: web
     name: travel-app-web
-    env: python
+    env: python # This service runs Python code, so 'runtime' is correct here
     buildCommand: "./build.sh"
     startCommand: "gunicorn alx_travel_app.wsgi:application"
     envVars:
@@ -20,35 +24,42 @@ services:
         fromService:
           type: pserv
           name: travel-app-db
-          property: connectionString
+          # CORRECTED property name
+          property: internalConnectionString
       - key: REDIS_URL
         fromService:
           type: pserv
           name: travel-app-redis
-          property: connectionString
+          # CORRECTED property name
+          property: redisConnectionString
       - key: SECRET_KEY
-        generateValue: true # Render will generate a secure secret key for you
+        generateValue: true
       - key: DEBUG
-        value: False # Always False in production
+        value: False
 
   # 4. Your Celery Worker Service
   - type: worker
     name: travel-app-worker
     env: python
+    # This service doesn't need a build command if the web service already installs dependencies
+    # But including it is safer if you ever change deployment strategies
+    buildCommand: "pip install -r requirements.txt"
     startCommand: "celery -A alx_travel_app worker --loglevel=info"
     envVars:
       - key: DATABASE_URL
         fromService:
           type: pserv
           name: travel-app-db
-          property: connectionString
+          # CORRECTED property name
+          property: internalConnectionString
       - key: REDIS_URL
         fromService:
           type: pserv
           name: travel-app-redis
-          property: connectionString
+          # CORRECTED property name
+          property: redisConnectionString
       - key: SECRET_KEY
-        fromService: # This ensures the worker uses the same secret key as the web server
+        fromService:
           type: web
           name: travel-app-web
           envVarKey: SECRET_KEY
