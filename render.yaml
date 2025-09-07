@@ -1,62 +1,28 @@
+# This YAML is based on the structure provided in the Render documentation.
+
+databases:
+  - name: travel-app-db   # A name for the database service
+    plan: free
+    databaseName: travelappdb # The actual name of the database inside PostgreSQL
+    user: travelappuser # The username for the database
+
 services:
-  # 1. A PostgreSQL database for your app
-  - type: pserv
-    name: travel-app-db
-    env: postgres # This is the correct way to specify the service type
-    plan: free # Explicitly request the free plan
-    databaseName: travelappdb
-    user: travelappuser
-
-  # 2. A Redis instance for your Celery tasks
-  - type: pserv
-    name: travel-app-redis
-    env: redis # This specifies the service type as Redis
-    plan: free # Explicitly request the free plan
-
-  # 3. Your Django Web Service (runs Gunicorn)
   - type: web
-    name: travel-app-web
-    env: python
-    plan: free # Explicitly request the free plan
-    buildCommand: "./build.sh"
-    startCommand: "gunicorn alx_travel_app.wsgi:application"
+    plan: free
+    name: travel-app-web # A name for your web service
+    runtime: python
+    buildCommand: './build.sh'
+    # IMPORTANT: The start command is updated for your project's name 'alx_travel_app'
+    # It uses wsgi.py, which is standard for Gunicorn.
+    startCommand: 'gunicorn alx_travel_app.wsgi:application'
     envVars:
       - key: DATABASE_URL
-        fromService:
-          type: pserv
-          name: travel-app-db
-          property: internalConnectionString
-      - key: REDIS_URL
-        fromService:
-          type: pserv
-          name: travel-app-redis
-          property: redisConnectionString
+        fromDatabase:
+          name: travel-app-db # This MUST match the database name above
+          property: connectionString
       - key: SECRET_KEY
-        generateValue: true
+        generateValue: true # Let Render create a secure secret key for you
+      - key: WEB_CONCURRENCY
+        value: 4 # As recommended in the guide
       - key: DEBUG
-        value: False
-
-  # 4. Your Celery Worker Service
-  - type: worker
-    name: travel-app-worker
-    env: python
-    plan: free # Explicitly request the free plan
-    startCommand: "celery -A alx_travel_app worker --loglevel=info"
-    envVars:
-      - key: DATABASE_URL
-        fromService:
-          type: pserv
-          name: travel-app-db
-          property: internalConnectionString
-      - key: REDIS_URL
-        fromService:
-          type: pserv
-          name: travel-app-redis
-          property: redisConnectionString
-      - key: SECRET_KEY
-        fromService:
-          type: web
-          name: travel-app-web
-          envVarKey: SECRET_KEY
-      - key: DEBUG
-        value: False
+        value: False # Always set DEBUG to False in production
