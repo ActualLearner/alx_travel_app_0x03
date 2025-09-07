@@ -1,6 +1,5 @@
 from celery import shared_task
 from django.core.mail import send_mail
-from .models import Booking
 
 
 @shared_task
@@ -10,18 +9,21 @@ def send_booking_confirmation_email(booking_id):
     """
     try:
         # Best Practice: Always fetch the fresh object from the DB inside the task.
+
+        from .models import Booking
+
         booking = Booking.objects.get(pk=booking_id)
 
-        subject = f"Your Booking Confirmation for {booking.listing.title}"
+        subject = f"Your Booking Confirmation for {booking.property.name}"
         message = f"""
         Hello {booking.user.username},
 
         Thank you for your booking!
 
         Here are your details:
-        - Property: {booking.listing.title}
-        - Check-in: {booking.check_in_date}
-        - Check-out: {booking.check_out_date}
+        - Property: {booking.property.name}
+        - Check-in: {booking.start_date}
+        - Check-out: {booking.end_date}
 
         We look forward to hosting you!
         """

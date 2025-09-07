@@ -32,8 +32,8 @@ class BookingViewSet(viewsets.ModelViewSet):
         return Booking.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-        send_booking_confirmation_email.delay(booking.id)
+        new_booking = serializer.save(user=self.request.user)
+        send_booking_confirmation_email.delay(new_booking.id)
 
 
 @api_view(["POST"])
